@@ -1,0 +1,29 @@
+name: Build Debug APK
+on: push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Build hev-socks5-tunnel
+        run: bash compile-hevtun.sh
+
+      - name: Build debug APK
+        working-directory: V2rayNG
+        run: ./gradlew assembleDebug
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v2rayNG-debug
+          path: V2rayNG/app/build/outputs/apk/debug/*.apk
