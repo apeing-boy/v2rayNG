@@ -56,7 +56,7 @@ class TProxyService(
     }
 
     private fun buildConfig(): String {
-        val socksPort = SettingsManager.getSocksPort()
+        val sockPath = File(context.filesDir, "xray-socks.sock").absolutePath
         val vpnConfig = SettingsManager.getCurrentVpnInterfaceAddressConfig()
         return buildString {
             appendLine("tunnel:")
@@ -68,8 +68,7 @@ class TProxyService(
             }
 
             appendLine("socks5:")
-            appendLine("  port: ${socksPort}")
-            appendLine("  address: ${AppConfig.LOOPBACK}")
+            appendLine("  address: ${sockPath}")
             appendLine("  udp: 'udp'")
 
             // Read-write timeout settings

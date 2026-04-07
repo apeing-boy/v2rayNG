@@ -3,6 +3,7 @@ package com.v2ray.ang.handler
 import android.content.Context
 import android.text.TextUtils
 import android.util.Log
+import com.v2ray.ang.AngApplication
 import com.google.gson.JsonArray
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.dto.ConfigResult
@@ -375,10 +376,24 @@ object V2rayConfigManager {
             val socksPort = SettingsManager.getSocksPort()
             val inbound1 = v2rayConfig.inbounds[0]
 
-            if (MmkvManager.decodeSettingsBool(AppConfig.PREF_PROXY_SHARING) != true) {
-                inbound1.listen = AppConfig.LOOPBACK
+            if (SettingsManager.isVpnMode() && SettingsManager.isUsingHevTun()) {
+                // Hev mode: use unix domain socket to prevent localhost port scanning
+                val sockPath = java.io.File(AngApplication.application.filesDir, "xray-socks.sock").absolutePath
+                // Clean up stale socket file
+                java.io.File(sockPath).delete()
+                inbound1.listen = sockPath
+                inbound1.port = 0
+            } else if (needTun()) {
+                // Xray tun mode: socks5 inbound not needed, remove it
+                v2rayConfig.inbounds.removeAll { it.tag == "socks" }
+            } else {
+                // Proxy mode: keep TCP socks5 (user explicitly configured apps to use it)
+                if (MmkvManager.decodeSettingsBool(AppConfig.PREF_PROXY_SHARING) != true) {
+                    inbound1.listen = AppConfig.LOOPBACK
+                }
+                inbound1.port = socksPort
             }
-            inbound1.port = socksPort
+
             val fakedns = MmkvManager.decodeSettingsBool(AppConfig.PREF_FAKE_DNS_ENABLED) == true
             val sniffAllTlsAndHttp =
                 MmkvManager.decodeSettingsBool(AppConfig.PREF_SNIFFING_ENABLED, true) != false
