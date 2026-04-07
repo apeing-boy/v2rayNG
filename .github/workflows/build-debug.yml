@@ -49,4 +49,4 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: v2rayNG-debug
-          path: V2rayNG/app/build/outputs/apk/debug/*.apk
+          path: V2rayNG/app/build/outputs/apk/*/debug/*.apk
