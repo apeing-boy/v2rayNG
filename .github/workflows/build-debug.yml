@@ -16,7 +16,12 @@ jobs:
 
       - uses: android-actions/setup-android@v3
 
+      - name: Install NDK
+        run: sdkmanager --install "ndk;27.0.12077973"
+
       - name: Build hev-socks5-tunnel
+        env:
+          NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/27.0.12077973
         run: bash compile-hevtun.sh
 
       - name: Build debug APK
