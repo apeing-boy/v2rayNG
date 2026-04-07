@@ -38,17 +38,23 @@ class TProxyService(
      * Starts the tun2socks process with the appropriate parameters.
      */
     override fun startTun2Socks() {
-//        Log.i(AppConfig.TAG, "Starting HevSocks5Tunnel via JNI")
-
         val configContent = buildConfig()
         val configFile = File(context.filesDir, "hev-socks5-tunnel.yaml").apply {
             writeText(configContent)
         }
-//        Log.i(AppConfig.TAG, "Config file created: ${configFile.absolutePath}")
-        Log.d(AppConfig.TAG, "HevSocks5Tunnel Config content:\n$configContent")
+        Log.w(AppConfig.TAG, "HevSocks5Tunnel Config content:\n$configContent")
+
+        // Wait for xray to create the unix socket file
+        val sockFile = File(context.filesDir, "xray-socks.sock")
+        var waited = 0
+        while (!sockFile.exists() && waited < 5000) {
+            Log.w(AppConfig.TAG, "HevSocks5Tunnel: waiting for socket file... ${waited}ms")
+            Thread.sleep(200)
+            waited += 200
+        }
+        Log.w(AppConfig.TAG, "HevSocks5Tunnel: socket exists=${sockFile.exists()} after ${waited}ms")
 
         try {
-//            Log.i(AppConfig.TAG, "TProxyStartService...")
             TProxyStartService(configFile.absolutePath, vpnInterface.fd)
         } catch (e: Exception) {
             Log.e(AppConfig.TAG, "HevSocks5Tunnel exception: ${e.message}")
@@ -58,6 +64,10 @@ class TProxyService(
     private fun buildConfig(): String {
         val sockPath = File(context.filesDir, "xray-socks.sock").absolutePath
         val vpnConfig = SettingsManager.getCurrentVpnInterfaceAddressConfig()
+
+        Log.w(AppConfig.TAG, "HevSocks5Tunnel: socket path = $sockPath")
+        Log.w(AppConfig.TAG, "HevSocks5Tunnel: socket exists = ${File(sockPath).exists()}")
+
         return buildString {
             appendLine("tunnel:")
             appendLine("  mtu: ${SettingsManager.getVpnMtu()}")

@@ -379,10 +379,10 @@ object V2rayConfigManager {
             if (SettingsManager.isVpnMode() && SettingsManager.isUsingHevTun()) {
                 // Hev mode: use unix domain socket to prevent localhost port scanning
                 val sockPath = java.io.File(AngApplication.application.filesDir, "xray-socks.sock").absolutePath
-                // Clean up stale socket file
                 java.io.File(sockPath).delete()
                 inbound1.listen = sockPath
                 inbound1.port = 0
+                Log.w(AppConfig.TAG, "SECURITY: xray socks5 inbound listen on unix socket: $sockPath")
             } else if (needTun()) {
                 // Xray tun mode: socks5 inbound not needed, remove it
                 v2rayConfig.inbounds.removeAll { it.tag == "socks" }
